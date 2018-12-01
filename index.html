@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transferwise CSV to FreeAgent CSV</title>
+</head>
+<body>
+<h1>Convert your Transferwise Statements to import into FreeAgent</h1>
+<p>FreeAgent doesn't integrate with <a href="https://transferwise.com/u/peterb1144" target="_blank">Transferwise</a>, so
+    we're reduced to exporting a CSV statement, <a target="_blank"
+                                                   href="https://support.freeagent.com/hc/en-gb/articles/115001222564-CSV-file-formats-for-bank-uploads">reformatting
+        it to FreeAgent's format</a>, and importing into FreeAgent.</p>
+<p>This tool automates the reformatting.</p>
+
+<h3>Select a file, and download the new one.</h3>
+
+<input id="file" type="file">
+
+<p>
+    <small>No data is uploaded to my server - the manipulation is done on your computer.</small>
+</p>
+
+<h4>Advanced Options</h4>
+Change the description formatting. Use the CSV column names and the <a
+        href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals" target="_blank">Template
+    Literal syntax</a><br>
+<input type="text" style="width: 100%; padding: 5px" id="template-description"
+       value="${ data['Description'] } (${ data['Exchange From'] ? `${ data['Exchange From'] } ${ data['Exchange To'] } ${ data['Exchange Rate'] }, ` : '' }Fee ${ data['Total fees'] })">
+
+<h3>Notes</h3>
+<p>Despite what <a target="_blank"
+                   href="https://support.freeagent.com/hc/en-gb/articles/115001222564-CSV-file-formats-for-bank-uploads">FreeAgent's
+    documentation</a> says, FreeAgent will import CSVs containing double quotes around strings, and commas within those
+    double quoted strings. I make use of that for the description field, to allow better data formatting.</p>
+<p>What FreeAgent cannot cope with is <code>&gt;</code> in a string. It renders it as a literal <code>&amp;gt;</code>. It's a bug in FreeAgent, but not going to be high priority for them to fix.</p>
+<script src="js/papaparse.min.js"></script>
+<script>
+    // From: https://github.com/mholt/PapaParse/issues/175#issuecomment-395978144
+    // For a bigger alternative, see https://github.com/eligrey/FileSaver.js/
+    function openSaveFileDialog(data, filename, mimetype) {
+
+        if (!data) return;
+
+        var blob = data.constructor !== Blob
+            ? new Blob([data], {type: mimetype || 'application/octet-stream'})
+            : data;
+
+        if (navigator.msSaveBlob) {
+            navigator.msSaveBlob(blob, filename);
+            return;
+        }
+
+        var lnk = document.createElement('a'),
+            url = window.URL,
+            objectURL;
+
+        if (mimetype) {
+            lnk.type = mimetype;
+        }
+
+        lnk.download = filename || 'untitled';
+        lnk.href = objectURL = url.createObjectURL(blob);
+        lnk.dispatchEvent(new MouseEvent('click'));
+        setTimeout(url.revokeObjectURL.bind(url, objectURL));
+
+    }
+</script>
+<script>
+    fileInput = document.getElementById('file');
+    fileInput.addEventListener('change', function (event) {
+        /** @var file File */
+        var file = event.target.files[0];
+        if (file.type !== 'text/csv' && file.type !== 'application/vnd.ms-excel') {
+            console.log('Wrong file type: ' + file.type);
+            return;
+        }
+        Papa.parse(file, {
+            header: true,
+            complete: function (results) {
+                console.log(results);
+
+                // if (results.errors.length > 0) {
+                //     console.log('CSV parsing errors: ...');
+                //     return;
+                // }
+
+                var out = [];
+                // Get rid of the header
+                results.data.shift();
+                results.data.forEach(function (data) {
+                    if (Object.keys(data).length < 15) return;
+
+                    //out.push([data['Date'], data['Amount'], `${ data['Description'] } (${ data['Exchange From'] ? `${ data['Exchange From'] }->${ data['Exchange To'] } ${ data['Exchange Rate'] }, ` : '' }Fee ${ data['Total fees'] })`]);
+                    out.push([data['Date'], data['Amount'], eval('`' + document.getElementById('template-description').value + '`')]);
+                    console.log(data)
+                });
+
+                console.log(out);
+
+                var csv = Papa.unparse(out);
+                console.log(csv);
+
+                openSaveFileDialog(csv, 'FreeAgent formatted - ' + file.name, 'text/csv')
+            }
+        });
+
+        console.log(event.target.files);
+
+    })
+</script>
+</body>
+</html>
