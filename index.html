@@ -76,6 +76,7 @@ Change the description formatting. Use the CSV column names and the <a
         }
         Papa.parse(file, {
             header: true,
+            delimiter: ',',
             complete: function (results) {
                 console.log(results);
 
@@ -86,7 +87,7 @@ Change the description formatting. Use the CSV column names and the <a
 
                 var out = [];
                 // Get rid of the header
-                results.data.shift();
+                //results.data.shift();
                 results.data.forEach(function (data) {
                     if (Object.keys(data).length < 15) return;
 
