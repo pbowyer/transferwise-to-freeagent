@@ -14,7 +14,7 @@
 
 <h3>Select a file, and download the new one.</h3>
 
-<input id="file" type="file">
+<input id="file" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
 
 <p>
     <small>No data is uploaded to my server - the manipulation is done on your computer.</small>
@@ -70,10 +70,7 @@ Change the description formatting. Use the CSV column names and the <a
     fileInput.addEventListener('change', function (event) {
         /** @var file File */
         var file = event.target.files[0];
-        if (file.type !== 'text/csv' && file.type !== 'application/vnd.ms-excel') {
-            console.log('Wrong file type: ' + file.type);
-            return;
-        }
+
         Papa.parse(file, {
             header: true,
             delimiter: ',',
