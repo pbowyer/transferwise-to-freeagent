@@ -106,7 +106,8 @@
 
                     if (document.getElementById("fees-on-separate-line").checked === true) {
                         let totalFees = parseInt(data['Total fees'], 10);
-                        if(totalFees > 0) {
+                        console.log('total fees are ' + data['Total fees']);
+                        if(data['Total fees'] > 0) {
                             out.push([data['Date'], '-' + data['Total fees'], 'Fees: ' + data['Description']]);
                         }
                     }
