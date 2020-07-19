@@ -101,15 +101,18 @@
                 results.data.forEach(function (data) {
                     if (Object.keys(data).length < 15) return;
 
-                    //out.push([data['Date'], data['Amount'], `${ data['Description'] } (${ data['Exchange From'] ? `${ data['Exchange From'] }->${ data['Exchange To'] } ${ data['Exchange Rate'] }, ` : '' }Fee ${ data['Total fees'] })`]);
-                    out.push([data['Date'], data['Amount'], eval('`' + document.getElementById('template-description').value + '`')]);
+                    console.log('total fees are ' + parseFloat(data['Total fees']));
 
-                    if (document.getElementById("fees-on-separate-line").checked === true) {
-                        let totalFees = parseInt(data['Total fees'], 10);
-                        console.log('total fees are ' + data['Total fees']);
-                        if(data['Total fees'] > 0) {
-                            out.push([data['Date'], '-' + data['Total fees'], 'Fees: ' + data['Description']]);
-                        }
+                    // feesAmount is always positive
+                    let feesAmount = parseFloat(data['Total fees']);
+                    if (document.getElementById("fees-on-separate-line").checked === true && feesAmount > 0) {
+                        let origAmount = parseFloat(data['Amount']);
+                        let amount = origAmount < 0 ? origAmount + feesAmount : origAmount - feesAmount;
+                        out.push([data['Date'], amount, eval('`' + document.getElementById('template-description').value + '`')]);
+                        out.push([data['Date'], '-' + data['Total fees'], 'Transferwise Fees: ' + data['Description']]);
+                    } else {
+                        //out.push([data['Date'], data['Amount'], `${ data['Description'] } (${ data['Exchange From'] ? `${ data['Exchange From'] }->${ data['Exchange To'] } ${ data['Exchange Rate'] }, ` : '' }Fee ${ data['Total fees'] })`]);
+                        out.push([data['Date'], data['Amount'], eval('`' + document.getElementById('template-description').value + '`')]);
                     }
 
                     console.log(data)
