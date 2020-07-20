@@ -21,18 +21,31 @@
 </p>
 
 <h4>Advanced Options</h4>
-Change the description formatting. Use the CSV column names and the <a
-        href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals" target="_blank">Template
+<p>
+    Change the description formatting. Use the CSV column names and the
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals" target="_blank">Template
     Literal syntax</a><br>
-<input type="text" style="width: 100%; padding: 5px" id="template-description"
+    <input type="text" style="width: 100%; padding: 5px" id="template-description"
        value="${ data['Description'] } (${ data['Exchange From'] ? `${ data['Exchange From'] } ${ data['Exchange To'] } ${ data['Exchange Rate'] }, ` : '' }Fee ${ data['Total fees'] })">
-
+</p>
+<p>
+    Show fees on a separate line:
+    <input type="checkbox" id="fees-on-separate-line" name="fees-on-separate-line" value="Show fees on a separate line">
+</p>
 <h3>Notes</h3>
-<p>Despite what <a target="_blank"
-                   href="https://support.freeagent.com/hc/en-gb/articles/115001222564-CSV-file-formats-for-bank-uploads">FreeAgent's
-    documentation</a> says, FreeAgent will import CSVs containing double quotes around strings, and commas within those
-    double quoted strings. I make use of that for the description field, to allow better data formatting.</p>
-<p>What FreeAgent cannot cope with is <code>&gt;</code> in a string. It renders it as a literal <code>&amp;gt;</code>. It's a bug in FreeAgent, but not going to be high priority for them to fix.</p>
+<p>
+    Despite what
+    <a target="_blank" href="https://support.freeagent.com/hc/en-gb/articles/115001222564-CSV-file-formats-for-bank-uploads">
+        FreeAgent's documentation
+    </a>
+    says, FreeAgent will import CSVs containing double quotes around strings, and commas within those
+    double quoted strings. I make use of that for the description field, to allow better data formatting.
+</p>
+<p>
+    What FreeAgent cannot cope with is <code>&gt;</code> in a string. It renders it as a literal <code>&amp;gt;</code>.
+    It's a bug in FreeAgent, but not going to be high priority for them to fix.
+</p>
+
 <script src="js/papaparse.min.js"></script>
 <script>
     // From: https://github.com/mholt/PapaParse/issues/175#issuecomment-395978144
@@ -88,8 +101,20 @@ Change the description formatting. Use the CSV column names and the <a
                 results.data.forEach(function (data) {
                     if (Object.keys(data).length < 15) return;
 
-                    //out.push([data['Date'], data['Amount'], `${ data['Description'] } (${ data['Exchange From'] ? `${ data['Exchange From'] }->${ data['Exchange To'] } ${ data['Exchange Rate'] }, ` : '' }Fee ${ data['Total fees'] })`]);
-                    out.push([data['Date'], data['Amount'], eval('`' + document.getElementById('template-description').value + '`')]);
+                    console.log('total fees are ' + parseFloat(data['Total fees']));
+
+                    // feesAmount is always positive
+                    let feesAmount = parseFloat(data['Total fees']);
+                    if (document.getElementById("fees-on-separate-line").checked === true && feesAmount > 0) {
+                        let origAmount = parseFloat(data['Amount']);
+                        let amount = origAmount < 0 ? origAmount + feesAmount : origAmount - feesAmount;
+                        out.push([data['Date'], amount, eval('`' + document.getElementById('template-description').value + '`')]);
+                        out.push([data['Date'], '-' + data['Total fees'], 'Transferwise Fees: ' + data['Description']]);
+                    } else {
+                        //out.push([data['Date'], data['Amount'], `${ data['Description'] } (${ data['Exchange From'] ? `${ data['Exchange From'] }->${ data['Exchange To'] } ${ data['Exchange Rate'] }, ` : '' }Fee ${ data['Total fees'] })`]);
+                        out.push([data['Date'], data['Amount'], eval('`' + document.getElementById('template-description').value + '`')]);
+                    }
+
                     console.log(data)
                 });
 
