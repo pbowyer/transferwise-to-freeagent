@@ -1,6 +1,8 @@
 # transferwise-to-freeagent
 Automatically reformat your TransferWise CSV file to a format that FreeAgent will import.
 
+PLEASE NOTE: FreeAgent now has native Transferwise feeds. You don't need to use this any more!
+
 # How to use
 
 Use on the website: https://pbowyer.github.io/transferwise-to-freeagent/
